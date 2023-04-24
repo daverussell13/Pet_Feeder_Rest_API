@@ -1,25 +1,34 @@
 package main
 
 import (
-	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/routes"
-	"github.com/gin-gonic/gin"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/cmd/api/routes"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/connections"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/feeder"
 	"github.com/joho/godotenv"
-	"log"
-	"os"
 )
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		panic("Error loading .env file")
 	}
 
-	router := gin.Default()
-	routes.SetupRoutes(router)
-
-	serverAddress := os.Getenv("SERVER_HOST") + ":" + os.Getenv("SERVER_PORT")
-
-	if err = router.Run(serverAddress); err != nil {
-		log.Fatal("Couldn't start server")
+	mqtt, err := connections.NewMqtt()
+	if err != nil {
+		panic("Failed to connect to mqtt broker : " + err.Error())
 	}
+
+	feederService := feeder.NewService(mqtt)
+	feederHandler := feeder.NewHandler(feederService)
+
+	handlers := routes.ApiHandlers{
+		V1: routes.ApiV1Handlers{
+			Feeder: feederHandler,
+		},
+	}
+
+	routes.InitRoutes(handlers)
+	routes.StartServer()
+
+	defer mqtt.CloseConnection()
 }
