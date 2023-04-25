@@ -7,12 +7,12 @@ import (
 )
 
 type handler struct {
-	service Service
+	feederService Service
 }
 
-func NewHandler(service Service) Handler {
+func NewHandler(feeder Service) Handler {
 	return &handler{
-		service: service,
+		feederService: feeder,
 	}
 }
 
@@ -21,12 +21,12 @@ func (h *handler) RealtimeFeed(c *gin.Context) {
 	if err := c.ShouldBindJSON(&realtimeFeedRequest); err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Bad Request",
+			"error": "Bad request",
 		})
 		return
 	}
 
-	res, err := h.service.RealtimeFeed(c.Request.Context(), &realtimeFeedRequest)
+	res, err := h.feederService.RealtimeFeed(c.Request.Context(), &realtimeFeedRequest)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -35,5 +35,8 @@ func (h *handler) RealtimeFeed(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, gin.H{
+		"error": false,
+		"data":  res,
+	})
 }

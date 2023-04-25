@@ -14,5 +14,8 @@ type Schedule struct {
 type FeedingSchedule struct {
 	ID         int64     `db:"id"`
 	DeviceID   uuid.UUID `db:"device_id"`
-	ScheduleID int       `db:"schedule_id"`
+	Schedule   *Schedule
+	FeedAmount int8      `db:"feed_amount"`
+	CreatedAt  time.Time `db:"created_at"`
+	DeletedAt  time.Time `db:"deleted_at"`
 }

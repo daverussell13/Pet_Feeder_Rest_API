@@ -3,6 +3,7 @@ package connections
 import (
 	"database/sql"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/database"
+	"log"
 	"net/url"
 	"os"
 )
@@ -32,6 +33,14 @@ func NewPostgresDB() (*PostgresDB, error) {
 	return &PostgresDB{
 		db: db,
 	}, nil
+}
+
+func (p *PostgresDB) BeginTx() *sql.Tx {
+	tx, err := p.db.Begin()
+	if err != nil {
+		log.Println("Failed to start transaction")
+	}
+	return tx
 }
 
 func (p *PostgresDB) GetDB() *sql.DB {

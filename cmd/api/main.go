@@ -1,9 +1,8 @@
 package main
 
 import (
-	"github.com/daverussell13/Pet_Feeder_Rest_API/cmd/api/routes"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/connections"
-	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/feeder"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/routes"
 	"github.com/joho/godotenv"
 )
 
@@ -19,21 +18,12 @@ func main() {
 	}
 	defer mqtt.CloseConnection()
 
-	pgDb, err := connections.NewPostgresDB()
+	pg, err := connections.NewPostgresDB()
 	if err != nil {
 		panic("Failed to connect to postgres database : " + err.Error())
 	}
-	defer pgDb.CloseConnection()
+	defer pg.CloseConnection()
 
-	feederService := feeder.NewService(mqtt)
-	feederHandler := feeder.NewHandler(feederService)
-
-	handlers := routes.ApiHandlers{
-		V1: routes.ApiV1Handlers{
-			Feeder: feederHandler,
-		},
-	}
-
-	routes.InitRoutes(handlers)
+	routes.InitRoutes(mqtt, pg)
 	routes.StartServer()
 }
