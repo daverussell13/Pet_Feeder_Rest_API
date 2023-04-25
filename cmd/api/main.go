@@ -17,6 +17,13 @@ func main() {
 	if err != nil {
 		panic("Failed to connect to mqtt broker : " + err.Error())
 	}
+	defer mqtt.CloseConnection()
+
+	pgDb, err := connections.NewPostgresDB()
+	if err != nil {
+		panic("Failed to connect to postgres database : " + err.Error())
+	}
+	defer pgDb.CloseConnection()
 
 	feederService := feeder.NewService(mqtt)
 	feederHandler := feeder.NewHandler(feederService)
@@ -29,6 +36,4 @@ func main() {
 
 	routes.InitRoutes(handlers)
 	routes.StartServer()
-
-	defer mqtt.CloseConnection()
 }

@@ -21,9 +21,10 @@ func NewService(mqtt *connections.Mqtt) Service {
 
 func (s *service) RealtimeFeed(c context.Context, request *RealtimeFeedRequest) (*RealtimeFeedResponse, error) {
 	feedAmount := request.FeedAmount
-
 	mqttClient := s.mqtt.GetClient()
-	token := mqttClient.Publish(s.mqtt.GetFeedTopic(), 2, false, strconv.Itoa(feedAmount))
+
+	topic := s.mqtt.GetTopic().FeedTopic + "/" + request.DeviceID
+	token := mqttClient.Publish(topic, 2, false, strconv.Itoa(feedAmount))
 	token.WaitTimeout(s.feedTimeout)
 
 	if token.Error() != nil {

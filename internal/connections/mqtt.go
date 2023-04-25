@@ -9,8 +9,12 @@ import (
 const MqttConnectionTimeout = 3 * time.Second
 
 type Mqtt struct {
-	feedTopic string
-	client    mqtt.Client
+	topic  *Topics
+	client mqtt.Client
+}
+
+type Topics struct {
+	FeedTopic string
 }
 
 func NewMqtt() (*Mqtt, error) {
@@ -30,8 +34,10 @@ func NewMqtt() (*Mqtt, error) {
 	}
 
 	return &Mqtt{
-		client:    client,
-		feedTopic: "damskuy/petfeeder/feed",
+		client: client,
+		topic: &Topics{
+			FeedTopic: "damskuy/petfeeder/feed",
+		},
 	}, nil
 }
 
@@ -43,6 +49,6 @@ func (m *Mqtt) CloseConnection() {
 	m.client.Disconnect(250)
 }
 
-func (m *Mqtt) GetFeedTopic() string {
-	return m.feedTopic
+func (m *Mqtt) GetTopic() *Topics {
+	return m.topic
 }
