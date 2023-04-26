@@ -18,4 +18,5 @@ type Repository interface {
 	InsertSchedule(ctx context.Context, s *Schedule) (*Schedule, error)
 	InsertFeedingSchedule(ctx context.Context, s *FeedingSchedule) (*FeedingSchedule, error)
 	GetScheduleByDayAndTime(ctx context.Context, day string, time time.Time) (*Schedule, error)
+	GetSameScheduleOnDevice(ctx context.Context, deviceId string, schedule *Schedule) (*FeedingSchedule, error)
 }

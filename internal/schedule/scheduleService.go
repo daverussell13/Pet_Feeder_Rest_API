@@ -38,19 +38,20 @@ func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*Sc
 		}
 	}
 
-	feedingSchedule := &FeedingSchedule{
-		DeviceID:   utils.StringToUUID(req.DeviceID),
-		Schedule:   schedule,
-		FeedAmount: int8(req.FeedAmount),
-	}
-
-	createdFeedingSchedule, err := s.scheduleRepository.InsertFeedingSchedule(ctx, feedingSchedule)
+	feedingSchedule, err := s.scheduleRepository.GetSameScheduleOnDevice(ctx, req.DeviceID, schedule)
 	if err != nil {
-		return nil, err
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+		feedingSchedule.FeedAmount = int8(req.FeedAmount)
+		feedingSchedule, err = s.scheduleRepository.InsertFeedingSchedule(ctx, feedingSchedule)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &ScheduledFeedResponse{
-		ScheduleID: strconv.Itoa(int(createdFeedingSchedule.ID)),
-		CreatedAt:  createdFeedingSchedule.CreatedAt.String(),
+		ScheduleID: strconv.Itoa(int(feedingSchedule.ID)),
+		CreatedAt:  feedingSchedule.CreatedAt.String(),
 	}, nil
 }
