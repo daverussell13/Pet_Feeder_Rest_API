@@ -2,56 +2,53 @@ package routes
 
 import (
 	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/connections"
-	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/feeder"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/realtime"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/schedule"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"net/http"
 	"os"
-	"regexp"
 )
 
 var r *gin.Engine
 
-type APIV1Handlers struct {
-	feeder   feeder.Handler
-	schedule schedule.Handler
-}
+func StartServer(conn *connections.Connections) {
+	// Realtime handler
+	realtimeService := realtime.NewService(conn.Mqtt)
+	realtimeHandler := realtime.NewHandler(realtimeService)
 
-func InitRoutes(mqtt *connections.Mqtt, pg *connections.PostgresDB) {
-	feederService := feeder.NewService(mqtt)
-	feederHandler := feeder.NewHandler(feederService)
-
-	scheduleRepository := schedule.NewRepository(pg.GetDB())
+	// Schedule handler
+	scheduleRepository := schedule.NewRepository(conn.PostgresDB.GetDB())
 	scheduleService := schedule.NewService(scheduleRepository)
 	scheduleHandler := schedule.NewHandler(scheduleService)
 
-	handlers := &APIV1Handlers{
-		feeder:   feederHandler,
+	v1 := &APIV1Handlers{
+		realtime: realtimeHandler,
 		schedule: scheduleHandler,
 	}
 
-	SetupRoutes(handlers)
+	handlers := NewHandler(v1)
+
+	setupRoutes(handlers)
+	runServer()
 }
 
-func TimeFormatValidator(fl validator.FieldLevel) bool {
-	timePattern := "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
-	regex := regexp.MustCompile(timePattern)
-	timeStr := fl.Field().String()
-	return regex.MatchString(timeStr)
-}
-
-func SetupRoutes(v1Hdl *APIV1Handlers) {
-	r = gin.Default()
-
+func initValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := v.RegisterValidation("timeFormat", TimeFormatValidator)
 		if err != nil {
 			return
 		}
 	}
+}
 
+func setupRoutes(handlers *Handlers) {
+	r = gin.Default()
+
+	initValidator()
+
+	// Test connection
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
@@ -59,11 +56,12 @@ func SetupRoutes(v1Hdl *APIV1Handlers) {
 	})
 
 	apiV1 := r.Group("/api/v1")
-	apiV1.POST("/realtime", v1Hdl.feeder.RealtimeFeed)
-	apiV1.POST("/schedule", v1Hdl.schedule.ScheduledFeed)
+	apiV1.POST("/realtime", handlers.V1.realtime.RealtimeFeed)
+	apiV1.POST("/schedule", handlers.V1.schedule.ScheduledFeed)
+	apiV1.GET("/schedule", handlers.V1.schedule.ScheduleList)
 }
 
-func StartServer() {
+func runServer() {
 	serverAddress := os.Getenv("SERVER_HOST") + ":" + os.Getenv("SERVER_PORT")
 	if err := r.Run(serverAddress); err != nil {
 		panic("Couldn't start server : " + err.Error())

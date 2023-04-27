@@ -1,4 +1,4 @@
-package feeder
+package realtime
 
 import (
 	"context"
@@ -10,5 +10,5 @@ type Handler interface {
 }
 
 type Service interface {
-	RealtimeFeed(ctx context.Context, request *RealtimeFeedRequest) (*RealtimeFeedResponse, error)
+	RealtimeFeed(ctx context.Context, request *FeedRequest) (*FeedResponse, error)
 }

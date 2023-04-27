@@ -50,3 +50,19 @@ func (h *handler) ScheduledFeed(c *gin.Context) {
 		"data":  res,
 	})
 }
+
+func (h *handler) ScheduleList(c *gin.Context) {
+	res, err := h.service.ScheduleList(c.Request.Context())
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Server error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"error": "false",
+		"data":  res,
+	})
+}

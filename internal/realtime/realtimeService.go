@@ -1,4 +1,4 @@
-package feeder
+package realtime
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func NewService(mqtt *connections.Mqtt) Service {
 	}
 }
 
-func (s *service) RealtimeFeed(c context.Context, request *RealtimeFeedRequest) (*RealtimeFeedResponse, error) {
+func (s *service) RealtimeFeed(c context.Context, request *FeedRequest) (*FeedResponse, error) {
 	feedAmount := request.FeedAmount
 	mqttClient := s.mqtt.GetClient()
 
@@ -31,7 +31,7 @@ func (s *service) RealtimeFeed(c context.Context, request *RealtimeFeedRequest) 
 		return nil, token.Error()
 	}
 
-	return &RealtimeFeedResponse{
+	return &FeedResponse{
 		DeviceID:   request.DeviceID,
 		FeedAmount: feedAmount,
 		CreatedAt:  time.Now().Format("2006-01-02 15:04:05"),

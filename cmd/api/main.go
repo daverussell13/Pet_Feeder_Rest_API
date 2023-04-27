@@ -12,18 +12,8 @@ func main() {
 		panic("Error loading .env file")
 	}
 
-	mqtt, err := connections.NewMqtt()
-	if err != nil {
-		panic("Failed to connect to mqtt broker : " + err.Error())
-	}
-	defer mqtt.CloseConnection()
+	connection := connections.NewConnection()
 
-	pg, err := connections.NewPostgresDB()
-	if err != nil {
-		panic("Failed to connect to postgres database : " + err.Error())
-	}
-	defer pg.CloseConnection()
-
-	routes.InitRoutes(mqtt, pg)
-	routes.StartServer()
+	routes.StartServer(connection)
+	defer connection.CloseAllConnection()
 }

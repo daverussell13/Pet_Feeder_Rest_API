@@ -1,4 +1,4 @@
-package feeder
+package realtime
 
 import (
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ func NewHandler(feeder Service) Handler {
 }
 
 func (h *handler) RealtimeFeed(c *gin.Context) {
-	var realtimeFeedRequest RealtimeFeedRequest
+	var realtimeFeedRequest FeedRequest
 	if err := c.ShouldBindJSON(&realtimeFeedRequest); err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{

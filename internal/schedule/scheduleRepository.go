@@ -87,3 +87,40 @@ func (r *repository) GetSameScheduleOnDevice(ctx context.Context, deviceId strin
 
 	return &feedingSchedule, nil
 }
+
+func (r *repository) GetAllSchedules(ctx context.Context) ([]*Schedule, error) {
+	query := "SELECT id, day_of_week, feed_time FROM schedules"
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	var schedules []*Schedule
+	for rows.Next() {
+		var feedTimeString string
+		schedule := &Schedule{}
+		err = rows.Scan(&schedule.ID, &schedule.DayOfWeek, &feedTimeString)
+		if err != nil {
+			return nil, err
+		}
+		schedule.FeedTime, err = time.Parse("15:04:05", feedTimeString)
+		if err != nil {
+			return nil, err
+		}
+		schedules = append(schedules, schedule)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	if len(schedules) == 0 && !rows.Next() {
+		return []*Schedule{}, nil
+	}
+
+	return schedules, nil
+}
