@@ -2,17 +2,17 @@ package realtime
 
 import (
 	"context"
-	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/connections"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/infrastructures/mqtt"
 	"strconv"
 	"time"
 )
 
 type service struct {
-	mqtt        *connections.Mqtt
+	mqtt        *mqtt.Mqtt
 	feedTimeout time.Duration
 }
 
-func NewService(mqtt *connections.Mqtt) Service {
+func NewService(mqtt *mqtt.Mqtt) Service {
 	return &service{
 		mqtt:        mqtt,
 		feedTimeout: time.Duration(3) * time.Second,

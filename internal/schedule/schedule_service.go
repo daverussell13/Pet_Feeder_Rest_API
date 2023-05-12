@@ -3,7 +3,7 @@ package schedule
 import (
 	"context"
 	"database/sql"
-	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/utils"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
 	"strconv"
 	"time"
 )

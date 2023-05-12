@@ -1,4 +1,4 @@
-package connections
+package mqtt
 
 import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const MqttConnectionTimeout = 3 * time.Second
+const ConnectionTimeout = 3 * time.Second
 
 type Mqtt struct {
 	topic  *Topics
@@ -29,7 +29,7 @@ func NewMqtt() (*Mqtt, error) {
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 
-	if !token.WaitTimeout(MqttConnectionTimeout) && token.Error() != nil {
+	if !token.WaitTimeout(ConnectionTimeout) && token.Error() != nil {
 		return nil, token.Error()
 	}
 

@@ -1,8 +1,7 @@
-package connections
+package database
 
 import (
 	"database/sql"
-	"github.com/daverussell13/Pet_Feeder_Rest_API/internal/database"
 	"log"
 	"net/url"
 	"os"
@@ -25,7 +24,7 @@ func NewPostgresDB() (*PostgresDB, error) {
 
 	dsn.RawQuery = queries.Encode()
 
-	db, err := database.NewDatabase("pgx", dsn.String())
+	db, err := NewDatabase("pgx", dsn.String())
 	if err != nil {
 		return nil, err
 	}
