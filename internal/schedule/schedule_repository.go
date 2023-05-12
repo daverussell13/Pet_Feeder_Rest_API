@@ -3,18 +3,53 @@ package schedule
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/infrastructures/database"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
 	"time"
 )
 
 type repository struct {
-	db *sql.DB
+	db database.DBTX
 }
 
-func NewRepository(db *sql.DB) Repository {
+func NewRepository(db database.DBTX) Repository {
 	return &repository{
 		db: db,
 	}
+}
+
+func (r *repository) WithTx(ctx context.Context) (Repository, error) {
+	if db, ok := r.db.(*sql.DB); ok {
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			return nil, err
+		}
+		return NewRepository(tx), nil
+	}
+	return nil, fmt.Errorf("invalid transaction type")
+}
+
+func (r *repository) CommitTx() error {
+	if tx, ok := r.db.(*sql.Tx); ok {
+		err := tx.Commit()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return fmt.Errorf("not in a transaction")
+}
+
+func (r *repository) RollbackTx() error {
+	if tx, ok := r.db.(*sql.Tx); ok {
+		err := tx.Rollback()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return fmt.Errorf("not in a transaction")
 }
 
 func (r *repository) InsertSchedule(ctx context.Context, s *Schedule) (*Schedule, error) {

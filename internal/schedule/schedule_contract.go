@@ -22,4 +22,7 @@ type Repository interface {
 	GetScheduleByDayAndTime(ctx context.Context, day string, time time.Time) (*Schedule, error)
 	GetSameScheduleOnDevice(ctx context.Context, deviceId string, schedule *Schedule) (*FeedingSchedule, error)
 	GetAllSchedules(ctx context.Context) ([]*Schedule, error)
+	WithTx(ctx context.Context) (Repository, error)
+	CommitTx() error
+	RollbackTx() error
 }

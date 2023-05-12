@@ -3,14 +3,14 @@ package seeders
 import "database/sql"
 
 type Seeder interface {
-	Run(db *sql.DB) error
+	Run(tx *sql.Tx) error
 }
 
 type SeederList []Seeder
 
-func (sl SeederList) RunAll(db *sql.DB) error {
+func (sl SeederList) RunAll(tx *sql.Tx) error {
 	for _, s := range sl {
-		err := s.Run(db)
+		err := s.Run(tx)
 		if err != nil {
 			return err
 		}

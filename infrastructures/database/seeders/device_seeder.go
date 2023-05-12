@@ -18,11 +18,11 @@ func seed() []device.Device {
 	}
 }
 
-func (s DeviceSeeder) Run(db *sql.DB) error {
+func (s DeviceSeeder) Run(tx *sql.Tx) error {
 	devices := seed()
 	query := "INSERT INTO devices (id, device_name, device_type) VALUES ($1, $2, $3)"
 	for _, d := range devices {
-		_, err := db.Exec(query, d.ID, d.DeviceName, d.DeviceType)
+		_, err := tx.Exec(query, d.ID, d.DeviceName, d.DeviceType)
 		if err != nil {
 			return err
 		}

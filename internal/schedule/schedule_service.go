@@ -30,12 +30,20 @@ func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*Sc
 	day := req.DayOfWeek
 	feedTime := utils.StringToTime(req.FeedTime)
 
+	scheduleRepositoryTx, err := s.scheduleRepository.WithTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = scheduleRepositoryTx.RollbackTx()
+	}()
+
 	schedule, err := s.scheduleRepository.GetScheduleByDayAndTime(ctx, day, feedTime)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
 		}
-		schedule, err = s.scheduleRepository.InsertSchedule(ctx, schedule)
+		schedule, err = scheduleRepositoryTx.InsertSchedule(ctx, schedule)
 		if err != nil {
 			return nil, err
 		}
@@ -47,10 +55,15 @@ func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*Sc
 			return nil, err
 		}
 		feedingSchedule.FeedAmount = int8(req.FeedAmount)
-		feedingSchedule, err = s.scheduleRepository.InsertFeedingSchedule(ctx, feedingSchedule)
+		feedingSchedule, err = scheduleRepositoryTx.InsertFeedingSchedule(ctx, feedingSchedule)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	err = scheduleRepositoryTx.CommitTx()
+	if err != nil {
+		return nil, err
 	}
 
 	return &ScheduledFeedResponse{

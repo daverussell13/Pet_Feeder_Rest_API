@@ -40,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err = seederList.RunAll(db); err != nil {
+	if err = seederList.RunAll(tx); err != nil {
 		log.Println("Seeding failed")
 		log.Println("Caused by :", err)
 		err = tx.Rollback()
