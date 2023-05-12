@@ -9,15 +9,11 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"net/http"
-	"os"
 )
 
-var r *gin.Engine
-
-func StartServer(mqtt *mqtt.Mqtt, db *sql.DB) {
+func InitRoutes(mqtt *mqtt.Mqtt, db *sql.DB) *gin.Engine {
 	handler := initHandler(mqtt, db)
-	initRoutes(handler)
-	runServer()
+	return setupRoutes(handler)
 }
 
 func initHandler(mqtt *mqtt.Mqtt, db *sql.DB) *Handlers {
@@ -27,7 +23,7 @@ func initHandler(mqtt *mqtt.Mqtt, db *sql.DB) *Handlers {
 
 	// Schedule handler
 	scheduleRepository := schedule.NewRepository(db)
-	scheduleService := schedule.NewService(scheduleRepository)
+	scheduleService := schedule.NewService(scheduleRepository, mqtt)
 	scheduleHandler := schedule.NewHandler(scheduleService)
 
 	v1 := &V1Handlers{
@@ -38,8 +34,8 @@ func initHandler(mqtt *mqtt.Mqtt, db *sql.DB) *Handlers {
 	return NewHandler(v1)
 }
 
-func initRoutes(handlers *Handlers) {
-	r = gin.Default()
+func setupRoutes(handlers *Handlers) *gin.Engine {
+	r := gin.Default()
 
 	initValidator()
 
@@ -53,21 +49,15 @@ func initRoutes(handlers *Handlers) {
 	apiV1 := r.Group("/api/v1")
 	apiV1.POST("/realtime", handlers.V1.realtime.RealtimeFeed)
 	apiV1.POST("/schedule", handlers.V1.schedule.ScheduledFeed)
-	apiV1.GET("/schedule", handlers.V1.schedule.ScheduleList)
+	apiV1.GET("/schedule", handlers.V1.schedule.ListSchedule)
+	return r
 }
 
 func initValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("timeFormat", TimeFormatValidator)
+		err := v.RegisterValidation("feedTimeFormat", FeedTimeFormatValidator)
 		if err != nil {
 			return
 		}
-	}
-}
-
-func runServer() {
-	serverAddress := os.Getenv("SERVER_HOST") + ":" + os.Getenv("SERVER_PORT")
-	if err := r.Run(serverAddress); err != nil {
-		panic("Couldn't start api : " + err.Error())
 	}
 }

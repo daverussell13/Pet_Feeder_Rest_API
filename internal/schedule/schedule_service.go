@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"database/sql"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/infrastructures/mqtt"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
 	"strconv"
 	"time"
@@ -11,10 +12,12 @@ import (
 type service struct {
 	scheduleRepository Repository
 	addScheduleTimeout time.Duration
+	mqtt               *mqtt.Mqtt
 }
 
-func NewService(scheduleRepository Repository) Service {
+func NewService(scheduleRepository Repository, mqtt *mqtt.Mqtt) Service {
 	return &service{
+		mqtt:               mqtt,
 		scheduleRepository: scheduleRepository,
 		addScheduleTimeout: time.Duration(5) * time.Second,
 	}
@@ -56,7 +59,7 @@ func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*Sc
 	}, nil
 }
 
-func (s *service) ScheduleList(ctx context.Context) (*ScheduleListResponse, error) {
+func (s *service) ShowAllSchedules(ctx context.Context) (*ListScheduleResponse, error) {
 	c, cancel := context.WithTimeout(ctx, time.Duration(10)*time.Second)
 	defer cancel()
 
@@ -70,12 +73,12 @@ func (s *service) ScheduleList(ctx context.Context) (*ScheduleListResponse, erro
 		scheduleJson := &ScheduleJson{
 			ID:        int(schedule.ID),
 			DayOfWeek: schedule.DayOfWeek,
-			FeedTime:  schedule.FeedTime,
+			FeedTime:  schedule.FeedTime.Format("15:04"),
 		}
 		schedulesJson = append(schedulesJson, scheduleJson)
 	}
 
-	return &ScheduleListResponse{
+	return &ListScheduleResponse{
 		Schedules: schedulesJson,
 	}, err
 }

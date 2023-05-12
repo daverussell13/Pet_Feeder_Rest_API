@@ -19,4 +19,11 @@ migrateup:
 migratedown:
 	migrate -path infrastructures/database/migrations -database "postgresql://root:loladmit@localhost:5432/pet_feeder?sslmode=disable" -verbose down
 
-.PHONY: server migratedown migrateup dropdb createdb postgrestty postgres
+dbseed:
+	go run .\cmd\seeder\main.go -database "postgresql://root:loladmit@localhost:5432/pet_feeder?sslmode=disable"
+
+migratefresh:
+	make migratedown && make migrateup && make dbseed
+
+
+.PHONY: server migratedown migrateup dropdb createdb postgrestty postgres dbseed migratefresh

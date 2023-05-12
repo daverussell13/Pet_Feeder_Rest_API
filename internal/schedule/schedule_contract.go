@@ -8,12 +8,12 @@ import (
 
 type Handler interface {
 	ScheduledFeed(ctx *gin.Context)
-	ScheduleList(ctx *gin.Context) // TODO: remove me
+	ListSchedule(ctx *gin.Context) // TODO: remove me
 }
 
 type Service interface {
 	AddSchedule(ctx context.Context, request *ScheduledFeedRequest) (*ScheduledFeedResponse, error)
-	ScheduleList(ctx context.Context) (*ScheduleListResponse, error) // TODO: remove me
+	ShowAllSchedules(ctx context.Context) (*ListScheduleResponse, error) // TODO: remove me
 }
 
 type Repository interface {

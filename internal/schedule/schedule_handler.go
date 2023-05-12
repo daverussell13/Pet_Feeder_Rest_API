@@ -51,8 +51,8 @@ func (h *handler) ScheduledFeed(c *gin.Context) {
 	})
 }
 
-func (h *handler) ScheduleList(c *gin.Context) {
-	res, err := h.service.ScheduleList(c.Request.Context())
+func (h *handler) ListSchedule(c *gin.Context) {
+	res, err := h.service.ShowAllSchedules(c.Request.Context())
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
