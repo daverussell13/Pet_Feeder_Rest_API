@@ -17,7 +17,7 @@ migrateup:
 	migrate -path infrastructures/database/migrations -database "postgresql://root:loladmit@localhost:5432/pet_feeder?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path infrastructures/database/migrations -database "postgresql://root:loladmit@localhost:5432/pet_feeder?sslmode=disable" -verbose down
+	migrate -path infrastructures/database/migrations -database "postgresql://root:loladmit@localhost:5432/pet_feeder?sslmode=disable" -verbose down -all
 
 dbseed:
 	go run .\cmd\seeder\main.go -database "postgresql://root:loladmit@localhost:5432/pet_feeder?sslmode=disable"

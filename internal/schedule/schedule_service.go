@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/infrastructures/mqtt"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
 	"strconv"
@@ -59,6 +60,27 @@ func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*Sc
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	mqttPayload := ScheduleMQTTPayload{
+		Day:    schedule.DayOfWeek,
+		Hour:   schedule.FeedTime.Hour(),
+		Minute: schedule.FeedTime.Minute(),
+		Amount: int(feedingSchedule.FeedAmount),
+	}
+
+	payload, err := json.Marshal(mqttPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	mqttClient := s.mqtt.GetClient()
+	topic := s.mqtt.GetTopic().ScheduleTopic + "/" + feedingSchedule.DeviceID.String()
+	token := mqttClient.Publish(topic, 2, false, payload)
+	token.WaitTimeout(s.addScheduleTimeout)
+
+	if token.Error() != nil {
+		return nil, token.Error()
 	}
 
 	err = scheduleRepositoryTx.CommitTx()

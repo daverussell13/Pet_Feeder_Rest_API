@@ -17,7 +17,14 @@ type ListScheduleResponse struct {
 }
 
 type ScheduleJson struct {
-	ID        int    `db:"id" json:"id" binding:"required"`
-	DayOfWeek string `db:"day_of_week" json:"day_of_week" binding:"required,oneof=Sunday Monday Tuesday Wednesday Thursday Friday Saturday"`
-	FeedTime  string `db:"feed_time" json:"feed_time" binding:"required,feedTimeFormat"`
+	ID        int    `json:"id" binding:"required"`
+	DayOfWeek string `json:"day_of_week" binding:"required,oneof=Sunday Monday Tuesday Wednesday Thursday Friday Saturday"`
+	FeedTime  string `json:"feed_time" binding:"required,feedTimeFormat"`
+}
+
+type ScheduleMQTTPayload struct {
+	Day    string `json:"day"`
+	Hour   int    `json:"hour"`
+	Minute int    `json:"minute"`
+	Amount int    `json:"amount"`
 }

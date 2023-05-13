@@ -1,6 +1,6 @@
 CREATE TABLE "schedules" (
   "id" SERIAL PRIMARY KEY,
-  "day_of_week" VARCHAR(10) NOT NULL,
+  "day_of_week" VARCHAR(10) NOT NULL CHECK ("day_of_week" IN ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')),
   "feed_time" TIME NOT NULL
 );
 

@@ -14,7 +14,8 @@ type Mqtt struct {
 }
 
 type Topics struct {
-	FeedTopic string
+	FeedTopic     string
+	ScheduleTopic string
 }
 
 func NewMqtt() (*Mqtt, error) {
@@ -36,7 +37,8 @@ func NewMqtt() (*Mqtt, error) {
 	return &Mqtt{
 		client: client,
 		topic: &Topics{
-			FeedTopic: "damskuy/petfeeder/feed",
+			FeedTopic:     "damskuy/petfeeder/feed",
+			ScheduleTopic: "damskuy/petfeeder/schedule",
 		},
 	}, nil
 }
