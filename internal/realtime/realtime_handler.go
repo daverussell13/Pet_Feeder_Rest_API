@@ -1,6 +1,8 @@
 package realtime
 
 import (
+	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/server"
+	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -29,9 +31,16 @@ func (h *handler) RealtimeFeed(c *gin.Context) {
 	res, err := h.feederService.RealtimeFeed(c.Request.Context(), &realtimeFeedRequest)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Server error",
-		})
+		switch err.Error() {
+		case server.DeviceUnresponsive:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": utils.UcFirst(err.Error()),
+			})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Server error",
+			})
+		}
 		return
 	}
 

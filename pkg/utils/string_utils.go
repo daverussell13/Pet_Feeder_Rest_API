@@ -4,6 +4,7 @@ import (
 	"github.com/gofrs/uuid"
 	"log"
 	"time"
+	"unicode"
 )
 
 func StringToTime(str string) time.Time {
@@ -22,4 +23,13 @@ func StringToUUID(str string) uuid.UUID {
 		return uuid.UUID{}
 	}
 	return u
+}
+
+func UcFirst(str string) string {
+	if str == "" {
+		return ""
+	}
+	r := []rune(str)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
 }
