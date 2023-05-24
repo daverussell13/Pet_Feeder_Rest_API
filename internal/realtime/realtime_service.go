@@ -28,13 +28,14 @@ func (s *service) RealtimeFeed(c context.Context, request *FeedRequest) (*FeedRe
 	mqttClient := s.mqtt.GetClient()
 
 	topic := s.mqtt.GetTopic().FeedTopic + "/" + request.DeviceID
-	ackTopic := topic + "/acknowledgement"
+	ackTopic := topic + "/acknowledge"
 
 	subChan := make(chan string)
 	subToken := mqttClient.Subscribe(ackTopic, 0, func(client mqttLib.Client, msg mqttLib.Message) {
 		subChan <- string(msg.Payload())
 	})
 	defer mqttClient.Unsubscribe(ackTopic)
+
 	if !subToken.WaitTimeout(time.Duration(2) * time.Second) {
 		return nil, errors.New(ackTopic + " Subscribe timeout")
 	}

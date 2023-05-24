@@ -37,15 +37,17 @@ func initHandler(mqtt *mqtt.Mqtt, db *sql.DB) *Handlers {
 func setupRoutes(handlers *Handlers) *gin.Engine {
 	r := gin.Default()
 
+	// Init routes custom validator
 	initValidator()
 
-	// Test connection
+	// Test default connection
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
 
+	// Api V1 routes
 	apiV1 := r.Group("/api/v1")
 	apiV1.POST("/realtime", handlers.V1.realtime.RealtimeFeed)
 	apiV1.POST("/schedule", handlers.V1.schedule.ScheduledFeed)

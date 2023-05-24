@@ -46,7 +46,7 @@ func (h *handler) ScheduledFeed(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"error": false,
+		"error": nil,
 		"data":  res,
 	})
 }
@@ -62,7 +62,7 @@ func (h *handler) ListSchedule(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"error": "false",
+		"error": nil,
 		"data":  res,
 	})
 }

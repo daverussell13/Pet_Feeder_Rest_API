@@ -20,19 +20,19 @@ func main() {
 		panic("Error loading .env file")
 	}
 
-	mqttClient, err := mqtt.NewMqtt()
+	mqttInstance, err := mqtt.NewMqtt()
 	if err != nil {
 		panic("Failed to connect to mqtt broker : " + err.Error())
 	}
-	defer mqttClient.CloseConnection()
+	defer mqttInstance.CloseConnection()
 
-	pg, err := database.NewPostgresDB()
+	pgInstance, err := database.NewPostgresDB()
 	if err != nil {
 		panic("Failed to connect to postgres database : " + err.Error())
 	}
-	defer pg.CloseConnection()
+	defer pgInstance.CloseConnection()
 
-	router := api.InitRoutes(mqttClient, pg.GetDB())
+	router := api.InitRoutes(mqttInstance, pgInstance.GetDB())
 
 	server := &http.Server{
 		Addr:    os.Getenv("SERVER_HOST") + ":" + os.Getenv("SERVER_PORT"),
@@ -49,7 +49,6 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	// Server shutdown timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

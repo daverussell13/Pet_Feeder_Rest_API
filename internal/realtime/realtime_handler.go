@@ -45,7 +45,7 @@ func (h *handler) RealtimeFeed(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"error": false,
+		"error": nil,
 		"data":  res,
 	})
 }
