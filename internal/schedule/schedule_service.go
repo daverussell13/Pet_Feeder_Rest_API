@@ -3,28 +3,29 @@ package schedule
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/infrastructures/mqtt"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
-	"strconv"
+	"github.com/gofrs/uuid"
 	"time"
 )
 
 type service struct {
-	scheduleRepository Repository
-	addScheduleTimeout time.Duration
-	mqtt               *mqtt.Mqtt
+	scheduleRepository         Repository
+	addScheduleTimeout         time.Duration
+	showDeviceSchedulesTimeout time.Duration
+	mqtt                       *mqtt.Mqtt
 }
 
 func NewService(scheduleRepository Repository, mqtt *mqtt.Mqtt) Service {
 	return &service{
-		mqtt:               mqtt,
-		scheduleRepository: scheduleRepository,
-		addScheduleTimeout: time.Duration(5) * time.Second,
+		mqtt:                       mqtt,
+		scheduleRepository:         scheduleRepository,
+		addScheduleTimeout:         time.Duration(5) * time.Second,
+		showDeviceSchedulesTimeout: time.Duration(5) * time.Second,
 	}
 }
 
-func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*ScheduledFeedResponse, error) {
+func (s *service) AddSchedule(c context.Context, req *ScheduleFeedRequest) (*ScheduleFeedResponse, error) {
 	ctx, cancel := context.WithTimeout(c, s.addScheduleTimeout)
 	defer cancel()
 
@@ -62,39 +63,64 @@ func (s *service) AddSchedule(c context.Context, req *ScheduledFeedRequest) (*Sc
 		}
 	}
 
-	mqttPayload := ScheduleMQTTPayload{
-		Day:    schedule.DayOfWeek,
-		Hour:   schedule.FeedTime.Hour(),
-		Minute: schedule.FeedTime.Minute(),
-		Amount: int(feedingSchedule.FeedAmount),
-	}
-
-	payload, err := json.Marshal(mqttPayload)
-	if err != nil {
-		return nil, err
-	}
-
-	mqttClient := s.mqtt.GetClient()
-	topic := s.mqtt.GetTopic().ScheduleTopic + "/" + feedingSchedule.DeviceID.String()
-	token := mqttClient.Publish(topic, 2, false, payload)
-	token.WaitTimeout(s.addScheduleTimeout)
-
-	if token.Error() != nil {
-		return nil, token.Error()
-	}
+	//mqttPayload := ScheduleMQTTPayload{
+	//	Day:    schedule.DayOfWeek,
+	//	Hour:   schedule.FeedTime.Hour(),
+	//	Minute: schedule.FeedTime.Minute(),
+	//	Amount: int(feedingSchedule.FeedAmount),
+	//}
+	//
+	//payload, err := json.Marshal(mqttPayload)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//mqttClient := s.mqtt.GetClient()
+	//topic := s.mqtt.GetTopic().ScheduleTopic + "/" + feedingSchedule.DeviceID.String()
+	//token := mqttClient.Publish(topic, 2, false, payload)
+	//token.WaitTimeout(s.addScheduleTimeout)
+	//
+	//if token.Error() != nil {
+	//	return nil, token.Error()
+	//}
 
 	err = scheduleRepositoryTx.CommitTx()
 	if err != nil {
 		return nil, err
 	}
 
-	return &ScheduledFeedResponse{
-		ScheduleID: strconv.Itoa(int(feedingSchedule.ID)),
+	return &ScheduleFeedResponse{
+		ScheduleID: int(feedingSchedule.ID),
 		CreatedAt:  feedingSchedule.CreatedAt.Format("2006-01-02 15:04:05"),
 	}, nil
 }
 
-func (s *service) ShowAllSchedules(ctx context.Context) (*ListScheduleResponse, error) {
+func (s *service) ShowDeviceSchedules(ctx context.Context, deviceId uuid.UUID) (*DeviceScheduleListResponse, error) {
+	c, cancel := context.WithTimeout(ctx, s.showDeviceSchedulesTimeout)
+	defer cancel()
+
+	feedingSchedules, err := s.scheduleRepository.GetDeviceSchedule(c, deviceId)
+	if err != nil {
+		return nil, err
+	}
+
+	var feedingSchedulesJson []*FeedingScheduleJson
+	for _, feedingSchedule := range feedingSchedules {
+		feedingScheduleJson := &FeedingScheduleJson{
+			ID:         int(feedingSchedule.ID),
+			DayOfWeek:  feedingSchedule.Schedule.DayOfWeek,
+			FeedTime:   feedingSchedule.Schedule.FeedTime.Format("15:04"),
+			FeedAmount: int(feedingSchedule.FeedAmount),
+		}
+		feedingSchedulesJson = append(feedingSchedulesJson, feedingScheduleJson)
+	}
+
+	return &DeviceScheduleListResponse{
+		Schedule: feedingSchedulesJson,
+	}, err
+}
+
+func (s *service) ShowAllSchedules(ctx context.Context) (*ScheduleListResponse, error) {
 	c, cancel := context.WithTimeout(ctx, time.Duration(10)*time.Second)
 	defer cancel()
 
@@ -113,7 +139,7 @@ func (s *service) ShowAllSchedules(ctx context.Context) (*ListScheduleResponse, 
 		schedulesJson = append(schedulesJson, scheduleJson)
 	}
 
-	return &ListScheduleResponse{
+	return &ScheduleListResponse{
 		Schedules: schedulesJson,
 	}, err
 }

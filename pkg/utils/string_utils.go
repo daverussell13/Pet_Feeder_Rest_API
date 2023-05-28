@@ -16,13 +16,12 @@ func StringToTime(str string) time.Time {
 	return t
 }
 
-func StringToUUID(str string) uuid.UUID {
+func StringToUUID(str string) (*uuid.UUID, error) {
 	u, err := uuid.FromString(str)
 	if err != nil {
-		log.Println(err)
-		return uuid.UUID{}
+		return nil, err
 	}
-	return u
+	return &u, nil
 }
 
 func UcFirst(str string) string {

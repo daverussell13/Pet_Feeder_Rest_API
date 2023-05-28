@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/infrastructures/database"
 	"github.com/daverussell13/Pet_Feeder_Rest_API/pkg/utils"
+	"github.com/gofrs/uuid"
 	"time"
 )
 
@@ -109,18 +110,71 @@ func (r *repository) GetSameScheduleOnDevice(ctx context.Context, deviceId strin
 		WHERE device_id = $1 AND schedule_id = $2
 	`
 
+	deviceUUID, err := utils.StringToUUID(deviceId)
+	if err != nil {
+		return nil, err
+	}
+
 	feedingSchedule := FeedingSchedule{
-		DeviceID: utils.StringToUUID(deviceId),
+		DeviceID: *deviceUUID,
 		Schedule: schedule,
 	}
 
 	row := r.db.QueryRowContext(ctx, query, deviceId, schedule.ID)
-	err := row.Scan(&feedingSchedule.ID, &feedingSchedule.FeedAmount, &feedingSchedule.CreatedAt)
+	err = row.Scan(&feedingSchedule.ID, &feedingSchedule.FeedAmount, &feedingSchedule.CreatedAt)
 	if err != nil {
 		return &feedingSchedule, err
 	}
 
 	return &feedingSchedule, nil
+}
+
+func (r *repository) GetDeviceSchedule(ctx context.Context, uuid uuid.UUID) ([]*FeedingSchedule, error) {
+	query := `
+		SELECT fs.id, fs.device_id, sch.id, sch.day_of_week, sch.feed_time, fs.feed_amount, fs.created_at
+		FROM feeding_schedules fs
+		JOIN schedules sch ON fs.schedule_id = sch.id
+		WHERE fs.device_id = $1
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, uuid)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	var feedingSchedules []*FeedingSchedule
+	for rows.Next() {
+		feedingSchedule := &FeedingSchedule{}
+		schedule := &Schedule{}
+		var feedTimeString string
+		err = rows.Scan(
+			&feedingSchedule.ID,
+			&feedingSchedule.DeviceID,
+			&schedule.ID,
+			&schedule.DayOfWeek,
+			&feedTimeString,
+			&feedingSchedule.FeedAmount,
+			&feedingSchedule.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		schedule.FeedTime, err = time.Parse("15:04:05", feedTimeString)
+		if err != nil {
+			return nil, err
+		}
+		feedingSchedule.Schedule = schedule
+		feedingSchedules = append(feedingSchedules, feedingSchedule)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return feedingSchedules, nil
 }
 
 func (r *repository) GetAllSchedules(ctx context.Context) ([]*Schedule, error) {

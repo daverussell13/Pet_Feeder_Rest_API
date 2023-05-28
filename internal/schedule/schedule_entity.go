@@ -17,5 +17,4 @@ type FeedingSchedule struct {
 	Schedule   *Schedule
 	FeedAmount int8      `db:"feed_amount"`
 	CreatedAt  time.Time `db:"created_at"`
-	DeletedAt  time.Time `db:"deleted_at"`
 }

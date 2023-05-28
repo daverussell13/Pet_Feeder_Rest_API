@@ -50,8 +50,9 @@ func setupRoutes(handlers *Handlers) *gin.Engine {
 	// Api V1 routes
 	apiV1 := r.Group("/api/v1")
 	apiV1.POST("/realtime", handlers.V1.realtime.RealtimeFeed)
-	apiV1.POST("/schedule", handlers.V1.schedule.ScheduledFeed)
-	apiV1.GET("/schedule", handlers.V1.schedule.ListSchedule)
+	apiV1.POST("/schedule", handlers.V1.schedule.ScheduleFeed)
+	apiV1.GET("/schedule", handlers.V1.schedule.ScheduleList)
+	apiV1.GET("/schedule/:id", handlers.V1.schedule.DeviceScheduleList)
 	return r
 }
 

@@ -15,6 +15,11 @@ func seed() []device.Device {
 			DeviceName: "PetFeeder1",
 			DeviceType: "Pet Feeder",
 		},
+		{
+			ID:         uuid.FromStringOrNil("a02a7dbc-0b28-4f63-80fa-646f9cf1bff1"),
+			DeviceName: "PetFeeder2",
+			DeviceType: "Pet Feeder",
+		},
 	}
 }
 
